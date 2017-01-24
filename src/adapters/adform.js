@@ -27,7 +27,8 @@ function AdformAdapter() {
           globalParams[j][1] = _value;
         }
       }
-
+      if (bid.mediaType === 'video')
+        bid.params.t = 2; // Tells adform to return a VAST XML
       request.push(formRequestUrl(bid.params));
     }
 
@@ -67,14 +68,17 @@ function AdformAdapter() {
       for (var i = 0, l = adItems.length; i < l; i++) {
         adItem = adItems[i];
         bid = bids[i];
-        if (adItem && adItem.response === 'banner' &&
-            verifySize(adItem, bid.sizes)) {
-
+        if (adItem &&
+           (adItem.response === 'banner' || adItem.response === 'vast_url') &&
+            verifySize(adItem, bid.sizes)) { 
           bidObject = bidfactory.createBid(1);
           bidObject.bidderCode = bidder;
           bidObject.cpm = adItem.win_bid;
           bidObject.cur = adItem.win_cur;
-          bidObject.ad = adItem.banner;
+          if(adItem.response === 'vast_url')
+            bidObject.vastUrl = adItem.vast_url;
+          else
+            bidObject.ad = adItem.banner;
           bidObject.width = adItem.width;
           bidObject.height = adItem.height;
           bidObject.dealId = adItem.deal_id;

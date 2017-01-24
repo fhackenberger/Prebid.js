@@ -66,6 +66,11 @@
       }
     },
     {
+      "adform": {
+        "supportedMediaTypes": ["video"]
+      }
+    },
+    {
       "rubicon": {
         "alias": "rubiconLite"
       }
