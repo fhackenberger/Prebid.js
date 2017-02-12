@@ -29,6 +29,7 @@
     "sekindoUM",
     "sonobi",
     "sovrn",
+    "splicky",
     "springserve",
     "triplelift",
     "yieldbot",
@@ -73,6 +74,11 @@
     {
       "rubicon": {
         "alias": "rubiconLite"
+      }
+    },
+    {
+      "splicky": {
+        "supportedMediaTypes": ["video"]
       }
     },
     {

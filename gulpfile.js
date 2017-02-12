@@ -187,6 +187,13 @@ gulp.task('watch', function () {
   });
 });
 
+// Watch Task for simple development
+gulp.task('devwatch', function () {
+  gulp.watch([
+    'src/**/*.js',
+  ], ['quality', 'devpack']);
+});
+
 gulp.task('quality', ['hint', 'jscs']);
 
 gulp.task('hint', function () {
