@@ -104,7 +104,7 @@ var ADAPTER_NAME          = 'splicky',
         $$PREBID_GLOBAL$$[SPLICKY_REQUESTS_MAP][bidderCode][bid.bidId] = bid;
         bidIds.push(bid.bidId);
         // Send the OpenRTB request
-        ajax.ajax('//' + endpoint, bidResponseCb, postData, {
+        ajax.ajax('//' + endpoint, bidResponseCb, JSON.stringify(postData), {
           method:'POST', contentType: 'application/json', withCredentials: true 
         });
       }

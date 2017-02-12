@@ -65,7 +65,7 @@ describe('Splicky adapter', () => {
     it('should return fully-initialized bid-response', () => {
       sandbox.stub(bidManager, 'addBidResponse'); // We'll intercept the behaviour of the addBidResponse method
       ajaxStub.onCall(0).callsArgWith(1, JSON.stringify(bidResponse1), {status: 200}); // the ajax cb handler is arg 1
-      doRequest(JSON.parse(JSON.stringify(bids_video))); 
+      doRequest(JSON.parse(JSON.stringify(bids_video)));
       let bidResponse = bidManager.addBidResponse.firstCall.args[1];
       expect(bidManager.addBidResponse.firstCall.args[0]).to.equal('code-1');
       expect(bidResponse.getStatusCode()).to.equal(CONSTANTS.STATUS.GOOD);
