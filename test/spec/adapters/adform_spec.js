@@ -1,13 +1,58 @@
 // jshint esversion: 6
 
 import { assert } from 'chai';
-import * as utils from '../../../src/utils';
-import adLoader from '../../../src/adloader';
-import bidManager from '../../../src/bidmanager';
-import adapter from '../../../src/adapters/adform';
+import * as utils from 'src/utils';
+import adLoader from 'src/adloader';
+import * as ajax from 'src/ajax'
+import bidManager from 'src/bidmanager';
+import adapter from 'src/adapters/adform';
 
 describe('Adform adapter', () => {
-  let _adapter, sandbox; 
+  let _adapter, sandbox, ajaxStub;
+  
+  const bids_banners = [
+    {
+      placementCode: 'code-1',
+      sizes: [ [ 100, 100], [ 90, 90 ] ],
+      params: {
+        mid: 1,
+        url: 'some// there'
+      },
+      adxDomain: 'newdomain',
+      tid: 45
+    },
+    {
+      placementCode: 'code-2',
+      sizes: [ [ 100, 100] ],
+      params: {
+        mid: 2,
+        tid: 145,
+        someVar: 'someValue'
+      }
+    },
+    {
+      placementCode: 'code-3',
+      sizes: [ [ 50, 40], [ 40, 50 ] ],
+      params: {
+        mid: 3,
+        pdom: 'home'
+      }
+    },
+    {
+      placementCode: 'code-4',
+      sizes: [ [ 640, 480] ],
+      mediaType: 'video',
+      params: {
+        mid: 4,
+        t: 2 // Request VAST XML
+      }
+    }
+  ];
+  function doRequest(bids) {
+    _adapter.callBids({
+      bids: bids
+    });
+  }
 
   describe('request', () => {
     it('should create callback method on PREBID_GLOBAL', () => {
@@ -19,7 +64,7 @@ describe('Adform adapter', () => {
 
       assert(_request.calledOnce);
       assert.lengthOf(_request.args[0], 1);
-      assert.lengthOf(parseUrl(_request.args[0][0]).items, 3);
+      assert.lengthOf(parseUrl(_request.args[0][0]).items, 4);
     });
 
     it('should handle global request parameters', () => {
@@ -40,6 +85,9 @@ describe('Adform adapter', () => {
       assert.deepEqual(_items[0], { mid: '1' });
       assert.deepEqual(_items[1], { mid: '2', someVar: 'someValue' });
       assert.deepEqual(_items[2], { mid: '3', pdom: 'home' });
+    });
+    beforeEach(() => {
+      doRequest(JSON.parse(JSON.stringify(bids_banners))); // Needs a copy of the bids_banners
     });
   });
 
@@ -82,6 +130,7 @@ describe('Adform adapter', () => {
     });
 
     beforeEach(() => {
+      doRequest(JSON.parse(JSON.stringify(bids_banners))); // Needs a copy of the bids_banners
       sandbox.stub(bidManager, 'addBidResponse');
       $$PREBID_GLOBAL$$._adf_callback([
         {
@@ -103,42 +152,13 @@ describe('Adform adapter', () => {
       ]);
     });
   });
-
+  
   beforeEach(() => {
     _adapter = adapter();
     utils.getUniqueIdentifierStr = () => 'callback';
     sandbox = sinon.sandbox.create();
     sandbox.stub(adLoader, 'loadScript');
-    _adapter.callBids({
-      bids: [
-        {
-          placementCode: 'code-1',
-          sizes: [ [ 100, 100], [ 90, 90 ] ],
-          params: {
-            mid: 1,
-            url: 'some// there'
-          },
-          adxDomain: 'newdomain',
-          tid: 45
-        },
-        {
-          placementCode: 'code-2',
-          sizes: [ [ 100, 100] ],
-          params: {
-            mid: 2,
-            tid: 145,
-            someVar: 'someValue'
-          }
-        },
-        {
-          placementCode: 'code-3',
-          sizes: [ [ 50, 40], [ 40, 50 ] ],
-          params: {
-            mid: 3,
-            pdom: 'home'
-          }
-        }
-    ]});
+    ajaxStub = sandbox.stub(ajax, 'ajax');
   });
 
   afterEach(() => {
