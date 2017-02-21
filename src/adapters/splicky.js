@@ -50,7 +50,7 @@ var ADAPTER_NAME          = 'splicky',
       for (var i = 0, l = bidReqs.length, bid, endpoint; i < l; i += 1) {
         bid = bidReqs[i];
         if (!utils.hasValidBidRequest(bid.params, requiredParams, ADAPTER_NAME))
-            return; // We can't proceed without the essential parameters
+          return; // We can't proceed without the essential parameters
 
         endpoint = getBidParamOrNull('endpoint', bid.params);
         postData = {}; // Build the OpenRTB json data to post to splicky
@@ -94,6 +94,8 @@ var ADAPTER_NAME          = 'splicky',
         postData.device = {
           didsha1: getBidParamOrNull('deviceIdHash', bid.params),
           language: getBidParamOrNull('lang', bid.params) || 'EN',
+          ip: getBidParamOrNull('ip', bid.params),
+          ua: getBidParamOrNull('userAgent', bid.params),
         };
         postData.device = getBidParamOrNull('device', bid.params) || postData.device; // Allow the user to specify the complete device parameter object
         var geo = getBidParamOrNull('geo', bid.params);
@@ -105,7 +107,7 @@ var ADAPTER_NAME          = 'splicky',
         bidIds.push(bid.bidId);
         // Send the OpenRTB request
         ajax.ajax('//' + endpoint, bidResponseCb, JSON.stringify(postData), {
-          method:'POST', contentType: 'application/json', withCredentials: true 
+          method:'POST', contentType: 'application/json', withCredentials: false 
         });
       }
 
@@ -137,13 +139,21 @@ var ADAPTER_NAME          = 'splicky',
         return utils.logWarn("Splicky bid received with different currency: " + rawBidResponse.cur + " expected: " + expectedCur);
 
       var bidResponse = bidfactory.createBid(constants.STATUS.GOOD, bidObj);
+      var trackPixelHtml = seatBid.nurl ? utils.createTrackPixelHtml(decodeURIComponent(seatBid.nurl)) : '';
       bidResponse.bidderCode = bidObj.bidder;
       bidResponse.cpm        = seatBid.price;
-      // We add the bid selection notification URL to the ad, as we don't have a framework way of triggering it
-      bidResponse.ad         = seatBid.adm + utils.createTrackPixelHtml(decodeURIComponent(seatBid.nurl));
+      bidResponse.adId       = seatBid.adid; // ID of a preloaded ad to be served if the bid wins.
+      // We don't have a framework way of triggering the nurl, so we set an HTML snipped triggering it as the ad
+      // if seatBid.adm is specified, it supersedes the nurl parameter according to OpenRTB spec
+      bidResponse.ad         = seatBid.adm || trackPixelHtml;
       bidResponse.rawAd      = seatBid.adm;
-      bidResponse.width      = bidObj.sizes[0][0];
-      bidResponse.height     = bidObj.sizes[0][1];
+      bidResponse.campaignId = seatBid.cid;
+      bidResponse.creativeId = seatBid.crid;
+      bidResponse.adDomain   = seatBid.adomain; // string array Advertiser domain for block list checking (e.g., “ford.com”).
+      bidResponse.adCat      = seatBid.cat; // string array IAB content categories of the creative.
+      // XXX The width and height might be different, we need to use bidObj.impid to find the corresponding impression in the parameters we sent
+      bidResponse.width      = seatBid.w || bidObj.sizes[0][0];
+      bidResponse.height     = seatBid.h || bidObj.sizes[0][1];
 //      console.log('Adding bidResponse for placement ' + bidObj.placementCode, bidResponse);
       bidmanager.addBidResponse(bidObj.placementCode, bidResponse);
       $$PREBID_GLOBAL$$[SPLICKY_REQUESTS_MAP][bidderCode][rawBidResponse.id].responded = true;
