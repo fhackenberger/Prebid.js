@@ -103,6 +103,7 @@ var ADAPTER_NAME          = 'splicky',
           postData.device.geo = geo;
 
         // Create the bidIdsMap for easier mapping back later
+        console.log('Registered splicky bid with id ' + bid.bidId);
         $$PREBID_GLOBAL$$[SPLICKY_REQUESTS_MAP][bidderCode][bid.bidId] = bid;
         bidIds.push(bid.bidId);
         // Send the OpenRTB request
@@ -134,7 +135,7 @@ var ADAPTER_NAME          = 'splicky',
         return utils.logWarn("Splicky bid received with no or invalid seatbid");
       
       var seatBid = rawBidResponse.seatbid[0].bid[0]; // According to splicky spec, there is only one seatBid per response
-      var expectedCur = bidObj.params['cur'] || DEFAULT_CUR;
+      var expectedCur = bidObj.params.cur || DEFAULT_CUR;
       if (rawBidResponse.cur !== expectedCur)
         return utils.logWarn("Splicky bid received with different currency: " + rawBidResponse.cur + " expected: " + expectedCur);
 
@@ -156,7 +157,10 @@ var ADAPTER_NAME          = 'splicky',
       bidResponse.height     = seatBid.h || bidObj.sizes[0][1];
 //      console.log('Adding bidResponse for placement ' + bidObj.placementCode, bidResponse);
       bidmanager.addBidResponse(bidObj.placementCode, bidResponse);
-      $$PREBID_GLOBAL$$[SPLICKY_REQUESTS_MAP][bidderCode][rawBidResponse.id].responded = true;
+      if ($$PREBID_GLOBAL$$[SPLICKY_REQUESTS_MAP][bidderCode].hasOwnProperty(rawBidResponse.id))
+        $$PREBID_GLOBAL$$[SPLICKY_REQUESTS_MAP][bidderCode][rawBidResponse.id].responded = true;
+      else
+        return utils.logWarn("Splicky bid response with missing request id: " + rawBidResponse.id);
     },
 
 
