@@ -78,6 +78,7 @@ var ADAPTER_NAME          = 'splicky',
           }
           postData.imp[0].banner.mimes = postData.imp[0].banner.mimes || ['image/jpeg', 'image/png'];
         }
+        postData.imp[0].pmp = getBidParamOrNull('impPmp', bid.params);
         postData.imp = getBidParamOrNull('imp', bid.params) || postData.imp; // Allow the user to specify the complete imp parameter object
         postData.app = {
           ver: '1',
